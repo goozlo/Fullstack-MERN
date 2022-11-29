@@ -1,8 +1,8 @@
 import express, { Router } from "express";
 import mongoose from "mongoose";
 import { registerValidation, loginValidation } from "./validations/auth.js";
-import { checkAuth } from "./utils";
-import { UserController, PostController } from "./controllers";
+import { checkAuth } from "./utils/index.js";
+import { UserController, PostController } from "./controllers/index.js";
 import { postCreateValidation } from "./validations/post.js";
 import dotenv from "dotenv";
 import multer from "multer";
