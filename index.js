@@ -1,11 +1,11 @@
 import express, { Router } from 'express'
 import mongoose from 'mongoose'
 import { registerValidation, loginValidation } from './validations/auth.js'
-import { checkAuth } from "./utils/check-auth.js"
-import * as UserController from "./controllers/user.controller.js"
-import * as PostController from "./controllers/post.controller.js"
+import { checkAuth } from "./utils"
+import { UserController, PostController } from "./controllers"
 import { postCreateValidation } from "./validations/post.js";
 import dotenv from 'dotenv'
+import multer from 'multer'
 
 dotenv.config()
 
@@ -17,7 +17,25 @@ mongoose
 const PORT = process.env.PORT || 4444
 const app = express()
 
+const storage = multer.diskStorage({
+    destination: (_, __, cb) => {
+        cb(null, 'uploads')
+    },
+    filename: (_, file, cb) => {
+        cb(null, file.originalname)
+    }
+})
+
+const upload = multer({ storage })
+
 app.use(express.json())
+app.use('/uploads', express.static('./uploads'))
+
+app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
+    res.json({
+        url: `/uploads/${req.file.originalname}`
+    })
+})
 
 const userRouter = Router()
 userRouter.post('/login', ...loginValidation, UserController.login)
@@ -28,7 +46,7 @@ const postRouter = Router()
 postRouter.post('/', checkAuth, ...postCreateValidation, PostController.create)
 postRouter.get('/', PostController.getAll)
 postRouter.get('/:id', PostController.getOne)
-postRouter.patch('/:id', checkAuth, PostController.update)
+postRouter.patch('/:id', checkAuth, ...postCreateValidation, PostController.update)
 postRouter.delete('/:id', checkAuth, PostController.remove)
 
 app.use('/auth', userRouter)
